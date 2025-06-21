@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        #video-feed {
+            width: 640px;
+            height: 480px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px auto;
+        }
+        .stats {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .counter {
+            font-size: 48px;
+            color: #4CAF50;
+        }
+        .stage {
+            font-size: 24px;
+            color: #666;
+        }
+        #finish-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #finish-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ exercise_name }}</h1>
+        <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Exercise Camera Feed">
+        <div class="stats">
+            <div class="counter">Reps: <span id="rep-counter">0</span></div>
+            <div class="stage">Stage: <span id="current-stage">waiting...</span></div>
+        </div>
+        <form action="/finish" method="post">
+            <input type="hidden" name="exercise" value="{{ exercise_name }}">
+            <button type="submit" id="finish-btn">Finish Exercise</button>
+        </form>
+    </div>
+    <script>
+        // WebSocket connection to get real-time updates
+        const ws = new WebSocket('ws://' + window.location.host + '/ws');
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            document.getElementById('rep-counter').textContent = data.counter;
+            document.getElementById('current-stage').textContent = data.stage;
+        };
+    </script>
+</body>
+</html>
