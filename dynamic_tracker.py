@@ -99,6 +99,8 @@ def get_frames():
             image.flags.writeable = True
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
+            angle = None
+            b = None
             try:
                 if results.pose_landmarks and exercise_state['config']:
                     landmarks = results.pose_landmarks.landmark
@@ -123,11 +125,6 @@ def get_frames():
                              landmarks[getattr(mp_pose.PoseLandmark, point_c).value].y]
 
                         angle = calculate_angle(a, b, c)
-                        
-                        # Draw angle on frame
-                        cv2.putText(image, str(int(angle)),
-                                  tuple(np.multiply(b, [640, 480]).astype(int)),
-                                  cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
                         # Rep logic
                         contracted_angle = config['contracted_angle']
@@ -158,7 +155,15 @@ def get_frames():
 
             # Draw pose landmarks
             mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-
+            # Flip the image horizontally for mirror effect
+            image = cv2.flip(image, 1)
+            if angle is not None and b is not None:
+                b = [1 - b[0], b[1]]
+                # Draw angle on frame
+                cv2.putText(image, str(int(angle)),
+                        tuple(np.multiply(b, [640, 480]).astype(int)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                
             # Encode frame
             ret, buffer = cv2.imencode('.jpg', image)
             frame = buffer.tobytes()
