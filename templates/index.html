@@ -1,64 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exercise Tracker</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 18px;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-top: 50px;
-        }
-        form {
-            max-width: 400px;
-            margin: 30px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        label {
-            font-size: 18px;
-            color: #333;
-        }
-        input, button {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Gym Trainer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 40px;
+      margin-top: 30px;
+    }
+    .image-box {
+      position: relative;
+      width: 320px; /* Visual size */
+    }
+    .image-box img {
+      width: 100%; /* Scales the image */
+      height: auto;
+      display: block;
+    }
+    .image-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 768px; /* Original image size */
+      height: 1051px;
+      transform: scale(0.416); /* 320px / 768px ≈ 0.416 */
+      transform-origin: top left;
+      pointer-events: auto;
+    }
+    .exercise-box {
+      flex: 1 1 320px;
+      max-width: 400px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    ul {
+      text-align: left;
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 15px;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }   
+    button[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover {
+      background-color: #45a049;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>AI Gym Trainer</h1>
-    <form action="/exercise" method="post">
-        <label for="exercise">What exercise do you wanna do today?</label>
-        <input type="text" id="exercise" name="exercise" placeholder="e.g., arm raise" required>
+  <h1>AI Gym Trainer</h1>
+  <p style="text-align:center;">Click on a body part to see suggested exercises:</p>
+
+  <div class="container">
+    <!-- Image box with scaled visual size but full-size map -->
+    <div class="image-box">
+      <img src="https://innerbody.imgix.net/muscular_system.png" alt="Muscular System" />
+      <div class="image-overlay">
+        <img src="https://innerbody.imgix.net/muscular_system.png" usemap="#bodymap" width="768" height="1051" alt="" style="opacity: 0;" />
+        <map name="bodymap">
+          <area shape="rect" coords="310,190,460,300" alt="Chest" onclick="showSuggestions('chest')">
+          <area shape="rect" coords="260,180,300,260" alt="Shoulders" onclick="showSuggestions('shoulders')">
+          <area shape="rect" coords="460,180,500,260" alt="Shoulders" onclick="showSuggestions('shoulders')">
+          <area shape="rect" coords="230,260,300,550" alt="Arms" onclick="showSuggestions('arms')">
+          <area shape="rect" coords="460,260,530,550" alt="Arms" onclick="showSuggestions('arms')">
+          <area shape="rect" coords="310,300,460,500" alt="Core" onclick="showSuggestions('core')">
+          <area shape="rect" coords="290,500,480,1100" alt="Legs" onclick="showSuggestions('legs')">
+        </map>
+      </div>
+    </div>
+
+    <!-- Exercise Suggestions + Input -->
+    <div class="exercise-box" id="exercise-box" style="display:none;">
+      <h3>Suggested Exercises:</h3>
+      <ul id="suggestion-list"></ul>
+      <form action="/exercise" method="post">
+        <label for="exercise">Enter Exercise Name:</label>
+        <input type="text" id="exercise" name="exercise" placeholder="e.g., bicep curl" required>
         <button type="submit">Start Exercise</button>
-    </form>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const suggestions = {
+      chest: ["chest press", "incline press", "decline press"],
+      arms: ["bicep curl", "triceps pushdown", "hammer curl"],
+      shoulders: ["shoulder press", "lateral raise", "front raise"],
+      core: ["sit to stand", "plank hold", "wall sit"],
+      legs: ["knee extension", "leg press", "calf raise"]
+    };
+
+    function showSuggestions(part) {
+      const list = document.getElementById("suggestion-list");
+      const box = document.getElementById("exercise-box");
+      list.innerHTML = "";
+
+      suggestions[part].forEach(ex => {
+        const li = document.createElement("li");
+        li.textContent = ex;
+        list.appendChild(li);
+      });
+
+      box.style.display = "block";
+      box.scrollIntoView({ behavior: "smooth" });
+    }
+  </script>
 </body>
 </html>

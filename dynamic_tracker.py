@@ -69,7 +69,7 @@ Output the result in this flat JSON format:
 
 def get_feedback(exercise, reps, duration):
     prompt = f"Stroke rehabilitation. I did {exercise} exercise: {reps} reps in {duration:.2f} seconds. Provide short feedback."
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     response = model.generate_content(prompt)
     return response.text.strip()
 
@@ -123,9 +123,6 @@ def run_exercise(exercise):
                      landmarks[getattr(mp_pose.PoseLandmark, point_b).value].y]
                 c = [landmarks[getattr(mp_pose.PoseLandmark, point_c).value].x,
                      landmarks[getattr(mp_pose.PoseLandmark, point_c).value].y]
-                left_heel = landmarks[mp_pose.PoseLandmark.LEFT_HEEL.value].y
-                right_heel = landmarks[mp_pose.PoseLandmark.RIGHT_HEEL.value].y
-                nose = landmarks[mp_pose.PoseLandmark.NOSE.value].y
 
                 angle = calculate_angle(a, b, c)
                 cv2.putText(image, str(int(angle)),
