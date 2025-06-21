@@ -59,7 +59,10 @@ Output the result in this flat JSON format:
         match = re.search(r'{.*}', response.text, re.DOTALL)
         if not match:
             raise ValueError("No JSON found in response.")
-        return json.loads(match.group())
+        config = json.loads(match.group())
+        print("\n[Gemini JSON Output]")
+        print(json.dumps(config, indent=4))  # Nicely formatted
+        return config
     except Exception as e:
         print(f"[ERROR] Gemini parsing failed: {e}")
         return None
@@ -120,6 +123,9 @@ def run_exercise(exercise):
                      landmarks[getattr(mp_pose.PoseLandmark, point_b).value].y]
                 c = [landmarks[getattr(mp_pose.PoseLandmark, point_c).value].x,
                      landmarks[getattr(mp_pose.PoseLandmark, point_c).value].y]
+                left_heel = landmarks[mp_pose.PoseLandmark.LEFT_HEEL.value].y
+                right_heel = landmarks[mp_pose.PoseLandmark.RIGHT_HEEL.value].y
+                nose = landmarks[mp_pose.PoseLandmark.NOSE.value].y
 
                 angle = calculate_angle(a, b, c)
                 cv2.putText(image, str(int(angle)),
