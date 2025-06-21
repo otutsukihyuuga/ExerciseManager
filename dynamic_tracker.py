@@ -7,9 +7,14 @@ import pyttsx3
 import threading
 import mediapipe as mp
 import google.generativeai as genai
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
 
 # Configure Gemini API
-genai.configure(api_key="AIzaSyCgHnk-X0PQPvqZakHLkb0R4ZMCsB5k5tA")
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Initialize MediaPipe and Pose
 mp_drawing = mp.solutions.drawing_utils
@@ -29,12 +34,12 @@ def calculate_angle(a, b, c):
     return 360 - angle if angle > 180 else angle
 
 def get_exercise_config(exercise):
-    prompt = f"""For the exercise {exercise}, give me the three MediaPipe pose landmarks (point A, point B, and point C) to calculate an angle for rep counting.
+    prompt = f"""For the exercise {exercise}, give me the three MediaPipe pose landmarks (point A, point B, and point C) to calculate angle for rep counting.
 
 - The landmarks should be ordered from top to bottom (e.g., shoulder → elbow → wrist).
 - Also provide the approximate angle values in degrees for:
-  - the "up" position (rep at the top)
-  - the "down" position (rep at the bottom)
+  - the contracted muscle angle
+  - the relaxed muscle angle
 
 Use MediaPipe's official landmark names from the mp_pose.PoseLandmark enum.
 
@@ -44,8 +49,8 @@ Output the result in this flat JSON format:
   "point_a": "LANDMARK_NAME",
   "point_b": "LANDMARK_NAME",
   "point_c": "LANDMARK_NAME",
-  "up_angle_threshold": VALUE,
-  "down_angle_threshold": VALUE
+  "contracted_angle": VALUE,
+  "relaxed_angle": VALUE
 }}"""
 
     model = genai.GenerativeModel("gemini-2.5-flash")
@@ -72,20 +77,24 @@ def run_exercise(exercise):
     config = get_exercise_config(exercise)
     if not config:
         return 0, 0, "Could not get configuration from Gemini."
+    else:
+        print(f"[GEMINI] Exercise: {exercise}")
+        print(f"[GEMINI] Config: {config}")
 
     # Unpack config
     point_a = config["point_a"]
     point_b = config["point_b"]
     point_c = config["point_c"]
-    up_thresh = config["up_angle_threshold"]
-    down_thresh = config["down_angle_threshold"]
+    contracted_angle = config["contracted_angle"]
+    relaxed_angle = config["relaxed_angle"]
 
-    print(f"[CONFIG] A={point_a}, B={point_b}, C={point_c}, Up={up_thresh}, Down={down_thresh}")
+    print(f"[CONFIG] A={point_a}, B={point_b}, C={point_c}, Contracted={contracted_angle}, Relaxed={relaxed_angle}")
     speak_text(f"Starting {exercise} exercise")
 
     cap = cv2.VideoCapture(0)
     counter = 0
     stage = "down"
+    visibility = False
     start_time = None
     end_time = None
 
@@ -103,6 +112,11 @@ def run_exercise(exercise):
 
             try:
                 landmarks = results.pose_landmarks.landmark
+                if landmarks[getattr(mp_pose.PoseLandmark, point_a).value].visibility > 0.5 and landmarks[getattr(mp_pose.PoseLandmark, point_b).value].visibility > 0.5 and landmarks[getattr(mp_pose.PoseLandmark, point_c).value].visibility > 0.5:
+                    visibility = True
+                else:
+                    visibility = False 
+
                 a = [landmarks[getattr(mp_pose.PoseLandmark, point_a).value].x,
                      landmarks[getattr(mp_pose.PoseLandmark, point_a).value].y]
                 b = [landmarks[getattr(mp_pose.PoseLandmark, point_b).value].x,
@@ -117,17 +131,17 @@ def run_exercise(exercise):
                 cv2.putText(image, str(int(angle)),
                             tuple(np.multiply(b, [640, 480]).astype(int)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-
                 # Rep logic
-                if angle > up_thresh and stage == "down" and left_heel < 1 and right_heel < 1 and nose > 0:
+                contracted_angle, relaxed_angle = max(contracted_angle, relaxed_angle), min(contracted_angle, relaxed_angle)
+                if angle > contracted_angle and stage == "down" and visibility:
                     stage = "up"
                     if counter == 0:
                         start_time = time.time()
                     counter += 1
 
-                elif angle < down_thresh and stage == "up" and left_heel < 1 and right_heel < 1 and nose > 0:
+                elif angle < relaxed_angle and stage == "up" and visibility:
                     stage = "down"
-                    threading.Thread(target=speak_text, args=(str(counter),)).start()
+                    # threading.Thread(target=speak_text, args=(str(counter),)).start()
 
             except Exception as e:
                 print(f"[Pose Error] {e}")
