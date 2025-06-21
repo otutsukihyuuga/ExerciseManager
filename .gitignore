@@ -1,0 +1,42 @@
+# Python virtual environment
+exercise-venv/
+venv/
+env/
+ENV/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+
+# API keys and secrets
+**/config.ini
+**/secrets.json
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Media files that might be generated
+*.mp4
+*.avi
+*.mov 
