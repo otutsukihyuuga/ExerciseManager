@@ -9,7 +9,7 @@ import mediapipe as mp
 import google.generativeai as genai
 
 # Configure Gemini API
-genai.configure(api_key="API_KEY")
+genai.configure(api_key="AIzaSyCgHnk-X0PQPvqZakHLkb0R4ZMCsB5k5tA")
 
 # Initialize MediaPipe and Pose
 mp_drawing = mp.solutions.drawing_utils
@@ -48,13 +48,16 @@ Output the result in this flat JSON format:
   "down_angle_threshold": VALUE
 }}"""
 
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     response = model.generate_content(prompt)
     try:
         match = re.search(r'{.*}', response.text, re.DOTALL)
         if not match:
             raise ValueError("No JSON found in response.")
-        return json.loads(match.group())
+        config = json.loads(match.group())
+        print("\n[Gemini JSON Output]")
+        print(json.dumps(config, indent=4))  # Nicely formatted
+        return config
     except Exception as e:
         print(f"[ERROR] Gemini parsing failed: {e}")
         return None
@@ -106,6 +109,9 @@ def run_exercise(exercise):
                      landmarks[getattr(mp_pose.PoseLandmark, point_b).value].y]
                 c = [landmarks[getattr(mp_pose.PoseLandmark, point_c).value].x,
                      landmarks[getattr(mp_pose.PoseLandmark, point_c).value].y]
+                left_heel = landmarks[mp_pose.PoseLandmark.LEFT_HEEL.value].y
+                right_heel = landmarks[mp_pose.PoseLandmark.RIGHT_HEEL.value].y
+                nose = landmarks[mp_pose.PoseLandmark.NOSE.value].y
 
                 angle = calculate_angle(a, b, c)
                 cv2.putText(image, str(int(angle)),
@@ -113,13 +119,13 @@ def run_exercise(exercise):
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
                 # Rep logic
-                if angle > up_thresh and stage == "down":
+                if angle > up_thresh and stage == "down" and left_heel < 1 and right_heel < 1 and nose > 0:
                     stage = "up"
                     if counter == 0:
                         start_time = time.time()
                     counter += 1
 
-                elif angle < down_thresh and stage == "up":
+                elif angle < down_thresh and stage == "up" and left_heel < 1 and right_heel < 1 and nose > 0:
                     stage = "down"
                     threading.Thread(target=speak_text, args=(str(counter),)).start()
 

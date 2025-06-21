@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from dynamic_tracker import run_exercise  # Your generic Gemini-powered function
+from dynamic_tracker import run_exercise
 
 app = Flask(__name__)
 
