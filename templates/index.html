@@ -130,6 +130,31 @@
       color: var(--text-primary);
     }
 
+    .history-box {
+      flex: 1;
+      min-width: 260px;
+      max-width: 360px;
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .history-box h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .history-item {
+      background: #f9f9f9;
+      margin-bottom: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
     ul {
       list-style: none;
       margin-bottom: 2rem;
@@ -276,6 +301,26 @@
     <p class="subtitle">Tap a muscle group to see suggested exercises!</p>
   </div>
 
+  <div style="margin-top: 1rem;">
+    <form action="{{ url_for('logout') }}" method="post" style="
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: inline;
+    ">
+      <button type="submit" style="
+        padding: 0.5rem 1rem;
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        width: auto;
+      ">Logout</button>
+    </form>
+  </div>
+
   <button id="back-button" class="back-button">← Back</button>
 
   <div class="container">
@@ -287,7 +332,7 @@
         <div class="region" style="top:19%; left:35%; width:6%; height:8%;" data-part="shoulders"></div>
         <div class="region" style="top:19%; left:59%; width:6%; height:8%;" data-part="shoulders"></div>
         <div class="region" style="top:25%; left:30%; width:9%; height:33%;" data-part="arms"></div>
-        <div class="region" style="top:25%; left:60%; width:9%; height:33%;" data-part="arms"></div>
+        <div class="region" style="top:25%; left:61%; width:9%; height:33%;" data-part="arms"></div>
         <div class="region" style="top:27%; left:40%; width:20%; height:20%;" data-part="core"></div>
         <div class="region" style="top:44%; left:38%; width:24%; height:52%;" data-part="legs"></div>
       </div>
@@ -305,6 +350,23 @@
         <button type="submit">Start Exercise</button>
       </form>
     </div>
+
+    {% if history %}
+    <div class="history-box">
+      <h3>Previous Sessions</h3>
+      {% for item in history|reverse %}
+        <div class="history-item" onclick="this.querySelector('.feedback').classList.toggle('show')">
+          <strong>{{ item.exercise|title }}</strong><br>
+          <span style="font-weight: 600;">Reps:</span> {{ item.count }}<br>
+          <span style="font-weight: 600;">Duration:</span> {{ item.duration }}s<br>
+          <div class="feedback" style="display: none; color: var(--text-secondary); font-style: italic;">
+            {{ item.feedback }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
   </div>
 
   <script>
@@ -323,13 +385,9 @@
       const input = document.getElementById("exercise");
       const backButton = document.getElementById("back-button");
 
-      // Show back button
       backButton.style.display = "block";
-
-      // Clear previous suggestions
       list.innerHTML = "";
-      
-      // Add new suggestions with animation delay
+
       suggestions[capitalizedPart].forEach((ex, index) => {
         const li = document.createElement("li");
         li.textContent = ex;
@@ -340,8 +398,6 @@
           input.focus();
         };
         list.appendChild(li);
-        
-        // Animate each item with a delay
         setTimeout(() => {
           li.style.transition = "var(--transition)";
           li.style.opacity = "1";
@@ -349,14 +405,9 @@
         }, index * 100);
       });
 
-      // Show and animate exercise box
       box.style.display = "block";
-      requestAnimationFrame(() => {
-        box.classList.add("visible");
-      });
-      
-      // Smooth scroll
-      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      requestAnimationFrame(() => box.classList.add("visible"));
+      document.getElementById("history-box").style.display = "block";
     }
 
     document.querySelectorAll(".region").forEach(region => {
@@ -366,22 +417,30 @@
       });
     });
 
-    // Add back button functionality
+    document.querySelectorAll('.feedback').forEach(fb => {
+      fb.classList.add('hidden');
+    });
+
+    document.querySelectorAll('.history-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const feedback = item.querySelector('.feedback');
+        feedback.style.display = feedback.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+
     document.getElementById("back-button").addEventListener("click", () => {
       const box = document.getElementById("exercise-box");
       const backButton = document.getElementById("back-button");
-      
-      // Hide exercise box with animation
+      const historyBox = document.getElementById("history-box");
+
       box.classList.remove("visible");
       setTimeout(() => {
         box.style.display = "none";
-      }, 300); // Match the CSS transition duration
-      
-      // Hide back button
+        historyBox.style.display = "none";
+      }, 300);
       backButton.style.display = "none";
     });
 
-    // Add escape key listener
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         const backButton = document.getElementById("back-button");
