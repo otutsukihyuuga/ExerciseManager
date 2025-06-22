@@ -62,7 +62,6 @@ Output the result in this flat JSON format:
   "contracted_angle": VALUE,
   "relaxed_angle": VALUE
 }}"""
-
     model = genai.GenerativeModel("gemini-2.5-flash")
     response = model.generate_content(prompt)
     try:
