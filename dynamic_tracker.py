@@ -149,6 +149,7 @@ def get_frames():
                                     'counter': exercise_state['counter'],
                                     'stage': exercise_state['stage']
                                 }))
+                                threading.Thread(target=speak_text, args=(str(exercise_state['counter']),)).start()
 
             except Exception as e:
                 print(f"Error processing landmarks: {e}")
@@ -184,7 +185,7 @@ def start_exercise(exercise):
     exercise_state['counter'] = 0
     exercise_state['stage'] = 'down'
     exercise_state['start_time'] = None
-    speak_text(f"Starting {exercise} exercise")
+    threading.Thread(target=speak_text, args=(f"Starting {exercise} exercise",)).start()
     return True
     
 def stop_exercise():
@@ -198,7 +199,8 @@ def stop_exercise():
         exercise_state['counter'],
         duration
     )
-    speak_text(feedback)
+    threading.Thread(target=speak_text, args=(feedback,)).start()
+    
     return {
         'count': exercise_state['counter'],
         'duration': duration,
