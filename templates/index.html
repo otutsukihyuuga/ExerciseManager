@@ -52,13 +52,13 @@
     }
 
     .container {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: auto auto;
       gap: 4rem;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       animation: slideUp 0.8s ease;
+      justify-content: center;
     }
 
     .image-box {
@@ -131,28 +131,116 @@
     }
 
     .history-box {
-      flex: 1;
-      min-width: 260px;
-      max-width: 360px;
+      min-width: 300px;
+      max-width: 400px;
+      width: 400px;
       background: var(--white);
       padding: 2rem;
       border-radius: 12px;
       box-shadow: var(--shadow);
+      height: 600px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 1;
+      transform: translateX(0);
     }
 
     .history-box h3 {
       font-size: 1.5rem;
       margin-bottom: 1.5rem;
       color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      padding-bottom: 1rem;
+      margin-top: -0.5rem;
+      z-index: 1;
+    }
+
+    .history-box h3::before {
+      content: "📋";
+      font-size: 1.2rem;
+    }
+
+    .history-items-container {
+      height: calc(100% - 4rem);
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    /* Custom Scrollbar Styling */
+    .history-items-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .history-items-container::-webkit-scrollbar-track {
+      background: var(--background);
+      border-radius: 4px;
+    }
+
+    .history-items-container::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 4px;
+      opacity: 0.8;
+    }
+
+    .history-items-container::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Firefox scrollbar styling */
+    .history-items-container {
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) var(--background);
     }
 
     .history-item {
-      background: #f9f9f9;
-      margin-bottom: 0.75rem;
-      padding: 0.75rem;
-      border-radius: 6px;
+      background: var(--background);
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
       font-size: 0.95rem;
       line-height: 1.5;
+      transition: var(--transition);
+      border-left: 4px solid transparent;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .history-item:hover {
+      transform: translateX(4px);
+      background: var(--primary-light);
+    }
+
+    .history-item strong {
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+
+    .history-item .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .history-item .stat {
+      background: white;
+      padding: 0.5rem;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .history-item .feedback {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed #ddd;
+      color: var(--text-secondary);
+      font-style: italic;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     ul {
@@ -264,12 +352,28 @@
 
     @media (max-width: 1024px) {
       .container {
+        grid-template-columns: 1fr;
         gap: 2rem;
         padding: 0 1rem;
       }
       
       .image-box {
-        width: 320px;
+        width: 100%;
+        max-width: 500px;
+        justify-self: center;
+      }
+
+      .history-box {
+        width: 100%;
+        max-width: 500px;
+        justify-self: center;
+        height: 400px;
+      }
+    }
+
+    @media (max-height: 800px) {
+      .history-box {
+        height: 400px;
       }
     }
 
@@ -352,18 +456,28 @@
     </div>
 
     {% if history %}
-    <div class="history-box">
+    <div class="history-box" id="history-box">
       <h3>Previous Sessions</h3>
-      {% for item in history|reverse %}
-        <div class="history-item" onclick="this.querySelector('.feedback').classList.toggle('show')">
-          <strong>{{ item.exercise|title }}</strong><br>
-          <span style="font-weight: 600;">Reps:</span> {{ item.count }}<br>
-          <span style="font-weight: 600;">Duration:</span> {{ item.duration }}s<br>
-          <div class="feedback" style="display: none; color: var(--text-secondary); font-style: italic;">
-            {{ item.feedback }}
+      <div class="history-items-container">
+        {% for item in history|reverse %}
+          <div class="history-item">
+            <strong>{{ item.exercise|title }}</strong>
+            <div class="stats">
+              <div class="stat">
+                <span style="font-weight: 600;">Reps</span><br>
+                {{ item.count }}
+              </div>
+              <div class="stat">
+                <span style="font-weight: 600;">Duration</span><br>
+                {{ item.duration }}s
+              </div>
+            </div>
+            <div class="feedback" style="display: none;">
+              {{ item.feedback }}
+            </div>
           </div>
-        </div>
-      {% endfor %}
+        {% endfor %}
+      </div>
     </div>
     {% endif %}
 
@@ -384,6 +498,16 @@
       const box = document.getElementById("exercise-box");
       const input = document.getElementById("exercise");
       const backButton = document.getElementById("back-button");
+      const historyBox = document.getElementById("history-box");
+
+      // Hide history box with animation
+      if (historyBox) {
+        historyBox.style.opacity = "0";
+        historyBox.style.transform = "translateX(20px)";
+        setTimeout(() => {
+          historyBox.style.display = "none";
+        }, 300);
+      }
 
       backButton.style.display = "block";
       list.innerHTML = "";
@@ -407,7 +531,6 @@
 
       box.style.display = "block";
       requestAnimationFrame(() => box.classList.add("visible"));
-      document.getElementById("history-box").style.display = "block";
     }
 
     document.querySelectorAll(".region").forEach(region => {
@@ -425,6 +548,7 @@
       item.addEventListener('click', () => {
         const feedback = item.querySelector('.feedback');
         feedback.style.display = feedback.style.display === 'none' ? 'block' : 'none';
+        item.style.borderLeftColor = feedback.style.display === 'none' ? 'transparent' : 'var(--primary)';
       });
     });
 
@@ -436,9 +560,17 @@
       box.classList.remove("visible");
       setTimeout(() => {
         box.style.display = "none";
-        historyBox.style.display = "none";
       }, 300);
       backButton.style.display = "none";
+
+      // Show history box with animation
+      if (historyBox) {
+        historyBox.style.display = "block";
+        setTimeout(() => {
+          historyBox.style.opacity = "1";
+          historyBox.style.transform = "translateX(0)";
+        }, 50);
+      }
     });
 
     document.addEventListener("keydown", (event) => {
