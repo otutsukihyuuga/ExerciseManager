@@ -380,6 +380,16 @@
       // Hide back button
       backButton.style.display = "none";
     });
+
+    // Add escape key listener
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        const backButton = document.getElementById("back-button");
+        if (backButton.style.display === "block") {
+          backButton.click();
+        }
+      }
+    });
   </script>
 </body>
 </html>
