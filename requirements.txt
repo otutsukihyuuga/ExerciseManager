@@ -6,3 +6,5 @@ google-generativeai>=0.3.0
 python-dotenv>=1.0.0
 flask>=3.0.0 
 flask-sock>=0.7.0
+Flask-PyMongo>=3.0.0
+Flask-Bcrypt>=1.0.1

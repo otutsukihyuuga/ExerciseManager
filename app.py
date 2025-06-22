@@ -4,14 +4,18 @@ from flask_bcrypt import Bcrypt
 from flask_sock import Sock
 from dynamic_tracker import get_frames, start_exercise, stop_exercise, set_websocket
 from datetime import timedelta
+from dotenv import load_dotenv
 import os
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key_here')
 app.permanent_session_lifetime = timedelta(days=7)
 
 # MongoDB Atlas setup
-app.config["MONGO_URI"] = "mongodb+srv://shah111pratham:2QppFRwXOduGQ6Tb@cluster0.6dsh3md.mongodb.net/GymAI?retryWrites=true&w=majority"
+app.config["MONGO_URI"] = os.environ.get('MONGO_URI')
 mongo = PyMongo(app)
 users_collection = mongo.db.users
 
