@@ -8,3 +8,5 @@ flask>=3.0.0
 flask-sock>=0.7.0
 Flask-PyMongo>=3.0.0
 Flask-Bcrypt>=1.0.1
+kyber-py>=0.1.0
+pycryptodome>=3.19.0

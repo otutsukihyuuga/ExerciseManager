@@ -76,6 +76,15 @@
             document.getElementById('rep-counter').textContent = data.counter;
             document.getElementById('current-stage').textContent = data.stage;
         };
+
+        // Add console logging to debug
+        ws.onopen = function() {
+            console.log('WebSocket connected');
+        };
+        
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
     </script>
 </body>
 </html>
